@@ -1,0 +1,31 @@
+# Java / Spring Boot
+backend/target/
+*.class
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/dist/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local configuration
+application-local.properties
+application-local.yml
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# IDE settings
+.idea/
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp
