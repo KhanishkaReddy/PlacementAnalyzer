@@ -1,6 +1,10 @@
 package com.example.placementanalyzer.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "http://localhost:5173")
 public class AIController {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(AIController.class);
+
     private final ChatClient chatClient;
 
     public AIController(ChatClient.Builder chatClientBuilder) {
@@ -19,34 +26,36 @@ public class AIController {
     }
 
     @GetMapping("/chat")
-public String chat(@RequestParam String message) {
+    public ResponseEntity<String> chat(
+            @RequestParam String message) {
 
-    try {
-        return chatClient
-                .prompt()
-                .user(message)
-                .call()
-                .content();
+        try {
+            String response = chatClient
+                    .prompt()
+                    .user(message)
+                    .call()
+                    .content();
 
-    } catch (Exception e) {
+            if (response == null || response.isBlank()) {
+                logger.error("Gemini returned an empty response.");
 
-        return """
-                Personalized Improvement Plan
+                return ResponseEntity
+                        .status(HttpStatus.BAD_GATEWAY)
+                        .body("Gemini returned an empty response.");
+            }
 
-                1. Spring Boot - HIGH PRIORITY
-                Learn Spring Boot REST APIs, controllers, services,
-                repositories and connect them with MySQL.
+            logger.info("Gemini generated a recommendation successfully.");
 
-                2. React - HIGH PRIORITY
-                Improve React fundamentals, components, state,
-                API integration and frontend-backend communication.
+            return ResponseEntity.ok(response);
 
-                3. Project Recommendation
-                Build a Full Stack Placement Management System using
-                React, Spring Boot and MySQL.
+        } catch (Exception e) {
+            logger.error("Gemini API request failed.", e);
 
-                Focus on Spring Boot first, then improve React.
-                """;
+            return ResponseEntity
+                    .status(HttpStatus.BAD_GATEWAY)
+                    .body("Gemini request failed: "
+                            + e.getClass().getSimpleName()
+                            + ". Check the backend terminal for details.");
+        }
     }
-}
 }

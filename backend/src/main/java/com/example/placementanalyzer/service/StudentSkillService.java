@@ -1,12 +1,13 @@
 package com.example.placementanalyzer.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.example.placementanalyzer.dto.StudentSkillDTO;
 import com.example.placementanalyzer.model.StudentSkill;
 import com.example.placementanalyzer.repository.StudentSkillRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class StudentSkillService {
@@ -19,11 +20,28 @@ public class StudentSkillService {
 
     public StudentSkillDTO createStudentSkill(StudentSkill studentSkill) {
 
-        StudentSkill savedStudentSkill =
-                studentSkillRepository.save(studentSkill);
+    Long studentId = studentSkill.getStudent().getId();
+    Long skillId = studentSkill.getSkill().getId();
 
-        return convertToDTO(savedStudentSkill);
+    List<StudentSkill> existingSkills =
+            studentSkillRepository.findByStudentId(studentId);
+
+    for (StudentSkill existing : existingSkills) {
+        if (existing.getSkill().getId().equals(skillId)) {
+            existing.setLevel(studentSkill.getLevel());
+
+            StudentSkill updated =
+                    studentSkillRepository.save(existing);
+
+            return convertToDTO(updated);
+        }
     }
+
+    StudentSkill saved =
+            studentSkillRepository.save(studentSkill);
+
+    return convertToDTO(saved);
+}
 
     public List<StudentSkillDTO> getSkillsByStudentId(Long studentId) {
 
